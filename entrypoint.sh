@@ -46,7 +46,7 @@ conjur_authn() {
 	  payload=$(echo "$jwt_padded" | base64 -d)
 	  # capture IAT time
 	  iat=$( echo "$payload" | jq .iat )
-          EPOCHSECONDS=$(date +%s)
+          # EPOCHSECONDS=$(date +%s)
 	  
 	  # Check if IAT less than or equal to server epoch
           if (( "$iat" <= "$EPOCHSECONDS" )); then
