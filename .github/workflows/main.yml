@@ -8,7 +8,7 @@ on:
 
 jobs:
   authn-jwt:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     permissions:
       id-token: 'write'
