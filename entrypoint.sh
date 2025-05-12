@@ -51,7 +51,7 @@ conjur_authn() {
           if (( "$iat" <= "$EPOCHSECONDS" )); then
 
             echo "::debug No delta between iat [$iat] and epoch [$EPOCHSECONDS]"
-            echo "$JWT_TOKEN"
+            echo "$JWT_TOKEN" | base64 -d
 
           # check if IAT greater than server epoch, if so, calculate delta and sleep before returning
           elif (( "$iat" > "$EPOCHSECONDS" )); then
