@@ -1,4 +1,4 @@
-name: conjur-action Test
+name: conjur-action
 
 on:
   push:
