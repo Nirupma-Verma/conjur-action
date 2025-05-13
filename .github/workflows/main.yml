@@ -13,7 +13,6 @@ jobs:
     permissions:
       id-token: 'write'
       contents: 'read'
-
     steps:
       - uses: actions/checkout@v1
       - name: Use CyberArk Conjur Secret Fetcher w/ GitHub JWT
