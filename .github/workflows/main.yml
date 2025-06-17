@@ -32,9 +32,9 @@ jobs:
   #   # needs: authn-jwt
 
     steps:
-      # - uses: actions/checkout@v1
+      - uses: actions/checkout@v1
       - name: Use CyberArk Conjur Secret Fetcher w/ GitHub Secrets
-        uses: cyberark/conjur-action@v2.0.10
+        uses: ./
         with:
           url: https://conjurcloudint.secretsmgr.cyberark.cloud/api
           account: conjur
