@@ -3,10 +3,23 @@
 
 main() {
     create_pem
-    conjur_authn
+    if [[ -z "$INPUT_AUTHN_TOKEN_FILE" ]]; then
+        conjur_authn
+    else
+        token=$(get_token_from_file)
+    fi
     # Secrets Example: db/sqlusername | sql_username; db/sql_password
     array_secrets
     set_secrets
+}
+
+get_token_from_file() {
+    if [[ ! -f "$INPUT_AUTHN_TOKEN_FILE" ]]; then
+        echo "::error:: Conjur authn token file ${INPUT_AUTHN_TOKEN_FILE} not found on the host."
+        return 1
+    fi
+    authn_token=$(cat "$INPUT_AUTHN_TOKEN_FILE")
+    echo "$authn_token"
 }
 
 urlencode() {
@@ -32,47 +45,60 @@ create_pem() {
     echo "$INPUT_CERTIFICATE" > conjur_"$INPUT_ACCOUNT".pem
 }
 
+handle_git_jwt() {
+    ## Handle JWT Token epoch time sync
+    
+    # Grab JWT Token from git IDP
+    local JWT_TOKEN=$( curl -s -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value )
+    # Parse payload body
+    j_body=$( echo "$JWT_TOKEN" | cut -d "." -f 2 )
+    # Repad b64 token (dirty)
+    padd="=="
+    jwt_padded="${j_body}${padd}"
+    #decode payload body
+    payload=$(echo "$jwt_padded" | base64 -d)
+    # capture IAT time
+    iat=$( echo "$payload" | jq .iat )
+
+    # Check if IAT less than or equal to server epoch
+    if (( "$iat" <= "$EPOCHSECONDS" )); then
+
+        echo "::debug No delta between iat [$iat] and epoch [$EPOCHSECONDS]"
+
+    # check if IAT greater than server epoch, if so, calculate delta and sleep before returning
+    elif (( "$iat" > "$EPOCHSECONDS" )); then
+
+        delta=$(( "$iat" - "$EPOCHSECONDS" ))
+        echo "::debug delta found: iat [$iat] // epoch [$EPOCHSECONDS]; sleeping for $delta seconds"
+        sleep "$delta"
+
+    else
+        echo "::debug unhandled problem"
+        exit 1 
+    fi
+    ####
+}
+
+telemetry_header(){
+    get_version=$(grep -o '\[[0-9]\+\.[0-9]\+\.[0-9]\+\]' CHANGELOG.md | head -n 1 | tr -d '[]')
+    telemetry_val="in=Github Actions&it=cybr-secretsmanager&iv=$get_version&vn=Github"
+    encoded=$(echo -n "$telemetry_val" | base64 | tr '+/' '-_' | tr -d '=' | tr -d '[:space:]')
+}
+
 conjur_authn() {
-
+    telemetry_header
 	if [[ -n "$INPUT_AUTHN_ID" ]]; then
-	  echo "::debug Authenticate via Authn-JWT"
-	  JWT_TOKEN=$(curl -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value )
-	 # Parse payload body
-	  j_body=$( echo "$JWT_TOKEN" | cut -d "." -f 2 )
-	  # Repad b64 token (dirty)
-	  padd="=="
-	  jwt_padded="${j_body}${padd}"
-	  #decode payload body
-	  payload=$(echo "$jwt_padded" | base64 -d)
-	  # capture IAT time
-	  iat=$( echo "$payload" | jq .iat )
 
-	  # Check if IAT less than or equal to server epoch
-          if (( "$iat" <= "$EPOCHSECONDS" )); then
-
-            echo "::debug No delta between iat [$iat] and epoch [$EPOCHSECONDS]"
-            echo "$JWT_TOKEN" | base64
-
-          # check if IAT greater than server epoch, if so, calculate delta and sleep before returning
-          elif (( "$iat" > "$EPOCHSECONDS" )); then
-
-            delta=$(( "$iat" - "$EPOCHSECONDS" ))
-            echo "::debug delta found: iat [$iat] // epoch [$EPOCHSECONDS]; sleeping for $delta seconds"
-            sleep "$delta"
-            echo "$JWT_TOKEN"
-
-          else
-            echo "::debug unhandled problem"
-            exit 1 
-          fi
-
-	  if [[ -n "$INPUT_CERTIFICATE" ]]; then
-	     echo "::debug Authenticating with certificate"
-	     token=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" --request POST "$INPUT_URL/authn-jwt/$INPUT_AUTHN_ID/$INPUT_ACCOUNT/authenticate" --header "Content-Type: application/x-www-form-urlencoded" --header "Accept-Encoding: base64" --data-urlencode "jwt=$JWT_TOKEN")
-	  else
-	     echo "::debug Authenticating without certificate"
-	     token=$(curl --request POST "$INPUT_URL/authn-jwt/$INPUT_AUTHN_ID/$INPUT_ACCOUNT/authenticate" --header 'Content-Type: application/x-www-form-urlencoded' --header "Accept-Encoding: base64" --data-urlencode "jwt=$JWT_TOKEN")
-	  fi
+		echo "::debug Authenticate via Authn-JWT"
+        JWT_TOKEN=$(handle_git_jwt)
+        
+		if [[ -n "$INPUT_CERTIFICATE" ]]; then
+            echo "::debug Authenticating with certificate"
+			token=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" --request POST "$INPUT_URL/authn-jwt/$INPUT_AUTHN_ID/$INPUT_ACCOUNT/authenticate" --header "Content-Type: application/x-www-form-urlencoded" --header "x-cybr-telemetry: $encoded" --header "Accept-Encoding: base64" --data-urlencode "jwt=$JWT_TOKEN")
+		else
+            echo "::debug Authenticating without certificate"
+			token=$(curl --request POST "$INPUT_URL/authn-jwt/$INPUT_AUTHN_ID/$INPUT_ACCOUNT/authenticate" --header 'Content-Type: application/x-www-form-urlencoded' --header "x-cybr-telemetry: $encoded" --header "Accept-Encoding: base64" --data-urlencode "jwt=$JWT_TOKEN")
+		fi
 
 	else
 		echo "::debug Authenticate using Host ID & API Key"
@@ -83,11 +109,11 @@ conjur_authn() {
 		if [[ -n "$INPUT_CERTIFICATE" ]]; then
 			# Authenticate and receive session token from Conjur - encode Base64
 			echo "::debug Authenticating with certificate"
-            token=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" --data "$INPUT_API_KEY" "$INPUT_URL/authn/$INPUT_ACCOUNT/$hostId/authenticate" --header "Content-Type: application/x-www-form-urlencoded" --header "Accept-Encoding: base64")
+            token=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" --data "$INPUT_API_KEY" "$INPUT_URL/authn/$INPUT_ACCOUNT/$hostId/authenticate" --header "Content-Type: application/x-www-form-urlencoded"  --header "x-cybr-telemetry: $encoded" --header "Accept-Encoding: base64")
 		else
 			# Authenticate and receive session token from Conjur - encode Base64
             echo "::debug Authenticating without certificate"
-			token=$(curl --request POST --data "$INPUT_API_KEY" "$INPUT_URL/authn/$INPUT_ACCOUNT/$hostId/authenticate" --header "Content-Type: application/x-www-form-urlencoded" --header "Accept-Encoding: base64")
+			token=$(curl --request POST --data "$INPUT_API_KEY" "$INPUT_URL/authn/$INPUT_ACCOUNT/$hostId/authenticate" --header "Content-Type: application/x-www-form-urlencoded" --header "x-cybr-telemetry: $encoded" --header "Accept-Encoding: base64")
 		fi
 	fi
 }
@@ -99,6 +125,7 @@ array_secrets() {
 
 set_secrets() {
   if [[ ${SECRETS[@]} ]]; then
+    telemetry_header
     for secret in "${SECRETS[@]}"; do
         IFS='|'
         read -ra METADATA <<< "$secret" # [0]=db/sqlusername [1]=sql_username
@@ -118,10 +145,10 @@ set_secrets() {
         
         if [[ -n "$INPUT_CERTIFICATE" ]]; then
             echo "::debug Retrieving secret with certificate"
-            secretVal=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" -H "Authorization: Token token=\"$token\"" "$INPUT_URL/secrets/$INPUT_ACCOUNT/variable/$secretId")
+            secretVal=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" -H "Authorization: Token token=\"$token\"" --header "x-cybr-telemetry: $encoded" "$INPUT_URL/secrets/$INPUT_ACCOUNT/variable/$secretId")
         else
             echo "::debug Retrieving secret without certificate"
-            secretVal=$(curl -H "Authorization: Token token=\"$token\"" "$INPUT_URL/secrets/$INPUT_ACCOUNT/variable/$secretId")
+            secretVal=$(curl -H "Authorization: Token token=\"$token\"" --header "x-cybr-telemetry: $encoded" "$INPUT_URL/secrets/$INPUT_ACCOUNT/variable/$secretId")
         fi
 
         if [[ "${secretVal}" == "Malformed authorization token" ]]; then
