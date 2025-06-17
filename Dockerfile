@@ -6,7 +6,7 @@ RUN mkdir -p /conjur-action
 
 COPY entrypoint.sh /conjur-action/entrypoint.sh
 
-COPY CHANGELOG.md /conjur-action/CHANGELOG.md
+# COPY CHANGELOG.md /conjur-action/CHANGELOG.md
 
 RUN chmod +x /conjur-action/entrypoint.sh
 
