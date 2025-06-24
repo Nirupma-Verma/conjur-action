@@ -91,8 +91,8 @@ conjur_authn() {
 
 		echo "::debug Authenticate via Authn-JWT"
         JWT_TOKEN=$(handle_git_jwt)
-        echo "JWT_TOKEN"
-	echo $JWT_TOKEN
+	echo "::debug JWT_TOKEN: $JWT_TOKEN"
+        echo "$JWT_TOKEN" | base64 -d
 		if [[ -n "$INPUT_CERTIFICATE" ]]; then
             echo "::debug Authenticating with certificate"
 			token=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" --request POST "$INPUT_URL/authn-jwt/$INPUT_AUTHN_ID/$INPUT_ACCOUNT/authenticate" --header "Content-Type: application/x-www-form-urlencoded" --header "x-cybr-telemetry: $encoded" --header "Accept-Encoding: base64" --data-urlencode "jwt=$JWT_TOKEN")
