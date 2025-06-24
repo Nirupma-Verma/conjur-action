@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  # authn-jwt:
-  #   runs-on: ubuntu-latest
+  authn-jwt:
+    runs-on: ubuntu-latest
     
   #   permissions:
   #     id-token: 'write'
@@ -29,8 +29,8 @@ jobs:
   #     - name: Clean Workspace
   #       uses: AutoModality/action-clean@v1.1.0
 
-  github-secrets:
-    runs-on: self-hosted
+  # github-secrets:
+  #   runs-on: self-hosted
     # needs: authn-jwt
     steps:
       - uses: actions/checkout@v1
@@ -41,7 +41,7 @@ jobs:
           account: conjur
           host_id: host/data/ansible/ansible-master
           api_key: 1mmwjwwf5xhq22hkhvjd1hxkd741djs6wq108rpnd2y0sk7y1s3p7ch
-          secrets: data/vault/IF_Safe_Pavan/safe/username|sql_username;data/vault/IF_Safe_Pavan/safe/password|sql_password
+          secrets: data/vault/IF_Safe_Pavan/safe/username|sql_username;data/vault/IF_Safe_Pavan/safe/password|sql_password;
       - name: Check SQL_USERNAME Outside Docker Container for Secret Masking
         run: printenv SQL_USERNAME | sed 's/./& /g'
       - name: Check SQL_PASSWORD Outside Docker Container for Secret Masking
