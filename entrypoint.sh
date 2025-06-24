@@ -64,14 +64,14 @@ handle_git_jwt() {
     if (( "$iat" <= "$EPOCHSECONDS" )); then
 
         echo "::debug No delta between iat [$iat] and epoch [$EPOCHSECONDS]"
-
+	echo "$JWT_TOKEN"
     # check if IAT greater than server epoch, if so, calculate delta and sleep before returning
     elif (( "$iat" > "$EPOCHSECONDS" )); then
 
         delta=$(( "$iat" - "$EPOCHSECONDS" ))
         echo "::debug delta found: iat [$iat] // epoch [$EPOCHSECONDS]; sleeping for $delta seconds"
         sleep "$delta"
-
+	echo "$JWT_TOKEN"
     else
         echo "::debug unhandled problem"
         exit 1 
