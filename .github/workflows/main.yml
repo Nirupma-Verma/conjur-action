@@ -30,7 +30,6 @@ jobs:
   # github-secrets:
   #   runs-on: self-hosted
   #   # needs: authn-jwt
-
     # steps:
       # - uses: actions/checkout@v1
       # - name: Use CyberArk Conjur Secret Fetcher w/ GitHub Secrets
