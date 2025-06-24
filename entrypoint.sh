@@ -53,14 +53,14 @@ handle_git_jwt() {
     # Grab JWT Token
     local jwt_token=$1
     # Parse payload body
-    j_body=$( echo "$jwt_token" | cut -d "." -f 2 )
+    j_body=$(echo "$jwt_token" | cut -d "." -f 2)
     # Repad b64 token (dirty)
     padd="=="
     jwt_padded="${j_body}${padd}"
     #decode payload body
     payload=$(echo "$jwt_padded" | base64 -d)
     # capture IAT time
-    iat=$( echo "$payload" | jq .iat )
+    iat=$(echo "$payload" | jq .iat)
 
     # Check if IAT less than or equal to server epoch
     if (( "$iat" <= "$EPOCHSECONDS" )); then
@@ -97,7 +97,7 @@ conjur_authn() {
 	if [[ -n "$INPUT_AUTHN_ID" ]]; then
 
 		echo "::debug Authenticate via Authn-JWT"
-        JWT_TOKEN=$( curl -s -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value )
+        JWT_TOKEN=$(curl -s -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value)
         handle_git_jwt
         
 		if [[ -n "$INPUT_CERTIFICATE" ]]; then
