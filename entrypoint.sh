@@ -91,7 +91,6 @@ conjur_authn() {
 
 		echo "::debug Authenticate via Authn-JWT"
         JWT_TOKEN=$(handle_git_jwt)
-	echo "::debug JWT_TOKEN: $JWT_TOKEN"
         echo "$JWT_TOKEN" | base64
 		if [[ -n "$INPUT_CERTIFICATE" ]]; then
             echo "::debug Authenticating with certificate"
