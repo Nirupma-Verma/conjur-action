@@ -49,7 +49,7 @@ handle_git_jwt() {
     ## Handle JWT Token epoch time sync
     
     # Grab JWT Token from git IDP
-    local JWT_TOKEN=$( curl -s -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value )
+    JWT_TOKEN=$( curl -s -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value )
     # Parse payload body
     j_body=$( echo "$JWT_TOKEN" | cut -d "." -f 2 )
     # Repad b64 token (dirty)
@@ -63,15 +63,15 @@ handle_git_jwt() {
     # Check if IAT less than or equal to server epoch
     if (( "$iat" <= "$EPOCHSECONDS" )); then
 
-        # echo "::debug No delta between iat [$iat] and epoch [$EPOCHSECONDS]"
-	echo "$JWT_TOKEN"
+        echo "::debug No delta between iat [$iat] and epoch [$EPOCHSECONDS]"
+	#echo "$JWT_TOKEN"
     # check if IAT greater than server epoch, if so, calculate delta and sleep before returning
     elif (( "$iat" > "$EPOCHSECONDS" )); then
 
         delta=$(( "$iat" - "$EPOCHSECONDS" ))
-        # echo "::debug delta found: iat [$iat] // epoch [$EPOCHSECONDS]; sleeping for $delta seconds"
+        echo "::debug delta found: iat [$iat] // epoch [$EPOCHSECONDS]; sleeping for $delta seconds"
         sleep "$delta"
-	echo "$JWT_TOKEN"
+	#echo "$JWT_TOKEN"
     else
         echo "::debug unhandled problem"
         exit 1 
