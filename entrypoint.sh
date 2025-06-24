@@ -1,6 +1,8 @@
 #!/bin/bash
 # Conjur Secret Retrieval for GitHub Action conjur-action
 
+script_dir=$(dirname "$(realpath "$0")")
+
 main() {
     create_pem
     if [[ -z "$INPUT_AUTHN_TOKEN_FILE" ]]; then
@@ -48,9 +50,8 @@ create_pem() {
 handle_git_jwt() {
     ## Handle JWT Token epoch time sync
     
-    # Grab JWT Token from git IDP
+    # Grab JWT Token
     local jwt_token=$1
-    # JWT_TOKEN=$( curl -s -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value )
     # Parse payload body
     j_body=$( echo "$jwt_token" | cut -d "." -f 2 )
     # Repad b64 token (dirty)
@@ -65,14 +66,14 @@ handle_git_jwt() {
     if (( "$iat" <= "$EPOCHSECONDS" )); then
 
         echo "::debug No delta between iat [$iat] and epoch [$EPOCHSECONDS]"
-	#echo "$JWT_TOKEN"
+
     # check if IAT greater than server epoch, if so, calculate delta and sleep before returning
     elif (( "$iat" > "$EPOCHSECONDS" )); then
 
         delta=$(( "$iat" - "$EPOCHSECONDS" ))
         echo "::debug delta found: iat [$iat] // epoch [$EPOCHSECONDS]; sleeping for $delta seconds"
         sleep "$delta"
-	#echo "$JWT_TOKEN"
+
     else
         echo "::debug unhandled problem"
         exit 1 
@@ -81,7 +82,12 @@ handle_git_jwt() {
 }
 
 telemetry_header(){
-    get_version=$(grep -o '\[[0-9]\+\.[0-9]\+\.[0-9]\+\]' CHANGELOG.md | head -n 1 | tr -d '[]')
+    changelog_file="$script_dir/CHANGELOG.md"
+    if [ -f "$changelog_file" ]; then
+        get_version=$(grep -o '\[[0-9]\+\.[0-9]\+\.[0-9]\+\]' $changelog_file | head -n 1 | tr -d '[]')
+    else
+        get_version="0.0.0-default"
+    fi
     telemetry_val="in=Github Actions&it=cybr-secretsmanager&iv=$get_version&vn=Github"
     encoded=$(echo -n "$telemetry_val" | base64 | tr '+/' '-_' | tr -d '=' | tr -d '[:space:]')
 }
@@ -92,8 +98,8 @@ conjur_authn() {
 
 		echo "::debug Authenticate via Authn-JWT"
         JWT_TOKEN=$( curl -s -H "Authorization:bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value )
-        handle_git_jwt "$JWT_TOKEN"
-        echo "$JWT_TOKEN" | base64
+        handle_git_jwt
+        
 		if [[ -n "$INPUT_CERTIFICATE" ]]; then
             echo "::debug Authenticating with certificate"
 			token=$(curl --cacert "conjur_$INPUT_ACCOUNT.pem" --request POST "$INPUT_URL/authn-jwt/$INPUT_AUTHN_ID/$INPUT_ACCOUNT/authenticate" --header "Content-Type: application/x-www-form-urlencoded" --header "x-cybr-telemetry: $encoded" --header "Accept-Encoding: base64" --data-urlencode "jwt=$JWT_TOKEN")
