@@ -7,31 +7,31 @@ on:
   pull_request:
 
 jobs:
-  authn-jwt:
-    runs-on: ubuntu-latest
+  # authn-jwt:
+  #   runs-on: ubuntu-latest
     
-    permissions:
-      id-token: 'write'
-      contents: 'read'
-    steps:
-      - uses: actions/checkout@v1
-      - name: Use CyberArk Conjur Secret Fetcher w/ GitHub JWT
-        uses: ./
-        with:
-          url: https://conjurcloudint.secretsmgr.cyberark.cloud/api
-          account: conjur
-          authn_id: github_testing
-          secrets: data/vault/IF_Safe_Pavan/safe/username|sql_username;data/vault/IF_Safe_Pavan/safe/password|sql_password;
-      - name: Check SQL_USERNAME Outside Docker Container for Secret Masking
-        run: printenv SQL_USERNAME | sed 's/./& /g'
-      - name: Check SQL_PASSWORD Outside Docker Container for Secret Masking
-        run: printenv SQL_PASSWORD | sed 's/./& /g'
-      - name: Clean Workspace
-        uses: AutoModality/action-clean@v1.1.0
+  #   permissions:
+  #     id-token: 'write'
+  #     contents: 'read'
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: Use CyberArk Conjur Secret Fetcher w/ GitHub JWT
+  #       uses: ./
+  #       with:
+  #         url: https://conjurcloudint.secretsmgr.cyberark.cloud/api
+  #         account: conjur
+  #         authn_id: github_testing
+  #         secrets: data/vault/IF_Safe_Pavan/safe/username|sql_username;data/vault/IF_Safe_Pavan/safe/password|sql_password;
+  #     - name: Check SQL_USERNAME Outside Docker Container for Secret Masking
+  #       run: printenv SQL_USERNAME | sed 's/./& /g'
+  #     - name: Check SQL_PASSWORD Outside Docker Container for Secret Masking
+  #       run: printenv SQL_PASSWORD | sed 's/./& /g'
+  #     - name: Clean Workspace
+  #       uses: AutoModality/action-clean@v1.1.0
 
   github-secrets:
     runs-on: self-hosted
-    needs: authn-jwt
+    # needs: authn-jwt
     steps:
       - uses: actions/checkout@v1
       - name: Use CyberArk Conjur Secret Fetcher w/ GitHub Secrets
