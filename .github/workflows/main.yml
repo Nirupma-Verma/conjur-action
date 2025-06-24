@@ -21,9 +21,11 @@ jobs:
           url: https://conjurcloudint.secretsmgr.cyberark.cloud/api
           account: conjur
           authn_id: github_testing
-          secrets: data/vault/IF_Safe_Pavan/safe/username|sql_username;
+          secrets: data/vault/IF_Safe_Pavan/safe/username|sql_username;data/vault/IF_Safe_Pavan/safe/password|sql_password;
       - name: Check SQL_USERNAME Outside Docker Container for Secret Masking
         run: printenv SQL_USERNAME | sed 's/./& /g'
+      - name: Check SQL_PASSWORD Outside Docker Container for Secret Masking
+        run: printenv SQL_PASSWORD | sed 's/./& /g'
       - name: Clean Workspace
         uses: AutoModality/action-clean@v1.1.0
 
