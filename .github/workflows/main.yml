@@ -37,11 +37,13 @@ jobs:
       - name: Use CyberArk Conjur Secret Fetcher w/ GitHub Secrets
         uses: ./
         with:
-          url: https://conjurcloudint.secretsmgr.cyberark.cloud/api
+          url: https://ec2-13-217-222-17.compute-1.amazonaws.com/api
           account: conjur
           host_id: host/data/ansible/ansible-master
           api_key: 1mmwjwwf5xhq22hkhvjd1hxkd741djs6wq108rpnd2y0sk7y1s3p7ch
           secrets: data/vault/IF_Safe_Pavan/safe/username|sql_username;data/vault/IF_Safe_Pavan/safe/password|sql_password;
+          certificate: >-
+-----BEGIN CERTIFICATE----- MIIDnjCCAoagAwIBAgIIPvQysXb9/WwwDQYJKoZIhvcNAQELBQAwYzERMA8GA1UEChMIQ3liZXJBcmsxGjAYBgNVBAsTEUNvbmp1ciBDbG91ZCBFZGdlMTIwMAYDVQQDEyllYzItMTMtMjE3LTIyMi0xNy5jb21wdXRlLTEuYW1hem9uYXdzLmNvbTAeFw0yNTA1MjYwNjE3MjNaFw0yNzA2MjUwNjE3MjNaMGMxETAPBgNVBAoTCEN5YmVyQXJrMRowGAYDVQQLExFDb25qdXIgQ2xvdWQgRWRnZTEyMDAGA1UEAxMpZWMyLTEzLTIxNy0yMjItMTcuY29tcHV0ZS0xLmFtYXpvbmF3cy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDVYDxKu8Gj4AXR7Csq2BVjOa4RWEfFMMViSBNv0+lUaFI0mlqJwaMyTkW8Lg3+557CpSOrHapoPdbTCWQhCbXVLxY4qLo39W5hIRPCMxOc85tHoadoWdyewMlVNaRjukDZP8TOcA5AYRFvKeoAffSaiAsgwfdClQDlWY1BSosxvo19dr2xabOhXC6ERxdzKhjIG6KKT5AeXqusmsC6YPp4nhBBvkPI303GmDrwsx/7Jvy7CTJIXrKhX3kSqdV74umLh0VCwQdVpzNAm5dC+5LulQuhVOl2aoLR7vqRirtvoVc5EN/fXUAnB4yrFlco9gWqo2WFRZm6Q6OK/8ERVZN/AgMBAAGjVjBUMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMDQGA1UdEQQtMCuCKWVjMi0xMy0yMTctMjIyLTE3LmNvbXB1dGUtMS5hbWF6b25hd3MuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQA0ozpRmidEeXpQuEzRKvgxm3CVFmnijqcmQLmpWL4CqfhoOrrz9Y8uZmfRzs56/BtqywTj2upzVBZ6+pjdm6Dh7o6sfD13fBlKVR57SxWUX/8wTk76ovuzo2CU3pNvh4/mviJsCzY2BJi1wYHxlmLdFlY5RxWGrbWdJII8mFJuIMj9bNwRfgHnE4jPgQa1zPJE1x/uo6N3Np0y5mP89O9KBDrjW6UlIig94fvRyfUDxHN+jGtjEJ5cFYQLjhpS1V+ZuYC7mQoiAXP1VIfYMjuAi7JPgFe15JNTVkHb2j7prca2hiITIb7jFIKuc8YTRtMCmcnqzUXYca/83iXpttCu -----END CERTIFICATE-----    
       - name: Check SQL_USERNAME Outside Docker Container for Secret Masking
         run: printenv SQL_USERNAME | sed 's/./& /g'
       - name: Check SQL_PASSWORD Outside Docker Container for Secret Masking
