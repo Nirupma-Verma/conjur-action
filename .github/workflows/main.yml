@@ -64,7 +64,8 @@ jobs:
             zPJE1x/uo6N3Np0y5mP89O9KBDrjW6UlIig94fvRyfUDxHN+jGtjEJ5cFYQLjhpS
             1V+ZuYC7mQoiAXP1VIfYMjuAi7JPgFe15JNTVkHb2j7prca2hiITIb7jFIKuc8YT
             RtMCmcnqzUXYca/83iXpttCu
-            -----END CERTIFICATE-----    
+            -----END CERTIFICATE-----  
+            
       - name: Check SQL_USERNAME Outside Docker Container for Secret Masking
         run: printenv SQL_USERNAME | sed 's/./& /g'
       - name: Check SQL_PASSWORD Outside Docker Container for Secret Masking
