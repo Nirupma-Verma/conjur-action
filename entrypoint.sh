@@ -3,6 +3,16 @@
 
 script_dir=$(dirname "$(realpath "$0")")
 
+# Access arguments
+INPUT_URL="$1"
+INPUT_ACCOUNT="$2"
+INPUT_HOST_ID="$3"
+INPUT_API_KEY="$4"
+INPUT_AUTHN_TOKEN_FILE="$5"
+INPUT_AUTHN_ID="$6"
+INPUT_SECRETS="$7"
+INPUT_CERTIFICATE="$8"
+
 main() {
     create_pem
     if [[ -z "$INPUT_AUTHN_TOKEN_FILE" ]]; then
