@@ -23,16 +23,21 @@ inputs:
   certificate:
     description: 'The Self-Signed SSL Certificate for your CyberArk Conjur instance'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
-  args:
-    - ${{ inputs.url }}
-    - ${{ inputs.account }}
-    - ${{ inputs.host_id }}
-    - ${{ inputs.api_key }}
-    - ${{ inputs.authn_id }}
-    - ${{ inputs.secrets }}
-    - ${{ inputs.certificate }}
+  using: 'composite'
+  steps:
+    - name: Run my shell script
+      run: |
+        chmod +x "entrypoint.sh"
+        bash "./entrypoint.sh" \
+          "${{ inputs.url }}" \
+          "${{ inputs.account }}" \
+          "${{ inputs.host_id }}" \
+          "${{ inputs.api_key }}" \
+          "${{ inputs.authn_token_file }}" \
+          "${{ inputs.authn_id }}" \
+          "${{ inputs.secrets }}" \
+          "${{ inputs.certificate }}"
+      shell: bash
 branding:
   icon: 'lock'
   color: 'blue'
