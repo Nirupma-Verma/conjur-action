@@ -45,6 +45,3 @@ jobs:
         run: printenv SQL_USERNAME | sed 's/./& /g'
       - name: Check SQL_PASSWORD Outside Docker Container for Secret Masking
         run: printenv SQL_PASSWORD | sed 's/./& /g'
-        run: printenv SQL_PASSWORD | sed 's/./& /g'
-  
-  
