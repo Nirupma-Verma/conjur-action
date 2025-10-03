@@ -1,6 +1,6 @@
-name: 'CyberArk Conjur Secret Fetcher'
+name: 'CyberArk Conjur Secret Fetcher Action'
 description: 'Securely retrieve a secret from CyberArk Conjur Secrets Manager and present to your action as a masked environment variable'
-author: 'Joe Garcia'
+author: 'CyberArk'
 inputs: 
   url:
     description: 'The URL for CyberArk Conjur endpoint'
@@ -14,6 +14,9 @@ inputs:
   api_key:
     description: 'The API Key associated with the given Host ID'
     required: false
+  authn_token_file:
+    description: 'The file path for the Conjur auth token'
+    required: false
   authn_id:
     description: 'The Service ID of JWT Authenticator'
     required: false
@@ -23,21 +26,17 @@ inputs:
   certificate:
     description: 'The Self-Signed SSL Certificate for your CyberArk Conjur instance'
 runs:
-  using: 'composite'
-  steps:
-    - name: Run my shell script
-      run: |
-        chmod +x "entrypoint.sh"
-        bash "./entrypoint.sh" \
-          "${{ inputs.url }}" \
-          "${{ inputs.account }}" \
-          "${{ inputs.host_id }}" \
-          "${{ inputs.api_key }}" \
-          "${{ inputs.authn_token_file }}" \
-          "${{ inputs.authn_id }}" \
-          "${{ inputs.secrets }}" \
-          "${{ inputs.certificate }}"
-      shell: bash
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.url }}
+    - ${{ inputs.account }}
+    - ${{ inputs.host_id }}
+    - ${{ inputs.api_key }}
+    - ${{ inputs.authn_token_file }}
+    - ${{ inputs.authn_id }}
+    - ${{ inputs.secrets }}
+    - ${{ inputs.certificate }}
 branding:
   icon: 'lock'
   color: 'blue'
